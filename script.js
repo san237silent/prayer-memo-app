@@ -1,118 +1,178 @@
-const taskInput = document.getElementById("taskInput");
+const titleInput = document.getElementById("titleInput");
+const contentInput = document.getElementById("contentInput");
 const addButton = document.getElementById("addButton");
-const clearButton = document.getElementById("clearButton");
-const taskList = document.getElementById("taskList");
+const clearAllButton = document.getElementById("clearAllButton");
+const memoList = document.getElementById("memoList");
 const statusText = document.getElementById("statusText");
+const emptyMessage = document.getElementById("emptyMessage");
 
-let tasks = [];
+let prayerMemos = [];
 
-function saveTasks() {
-  localStorage.setItem("tasks", JSON.stringify(tasks));
+function saveMemos() {
+  localStorage.setItem("prayerMemos", JSON.stringify(prayerMemos));
 }
 
-function loadTasks() {
-  const saved = localStorage.getItem("tasks");
+function loadMemos() {
+  const saved = localStorage.getItem("prayerMemos");
 
   if (saved) {
-    tasks = JSON.parse(saved);
+    prayerMemos = JSON.parse(saved);
   } else {
-    tasks = [];
+    prayerMemos = [];
   }
 }
 
 function updateStatus() {
-  const total = tasks.length;
-  const done = tasks.filter(task => task.done).length;
-  statusText.textContent = `전체 ${total}개 / 완료 ${done}개`;
+  const total = prayerMemos.length;
+  const answered = prayerMemos.filter(memo => memo.answered).length;
+  statusText.textContent = `전체 ${total}개 / 응답됨 ${answered}개`;
 }
 
-function renderTasks() {
-  taskList.innerHTML = "";
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  return date.toLocaleString("ko-KR");
+}
 
-  tasks.forEach((task, index) => {
-    const li = document.createElement("li");
-    li.className = "task-item";
+function renderMemos() {
+  memoList.innerHTML = "";
 
-    if (task.done) {
-      li.classList.add("done");
+  if (prayerMemos.length === 0) {
+    emptyMessage.style.display = "block";
+  } else {
+    emptyMessage.style.display = "none";
+  }
+
+  prayerMemos.forEach((memo, index) => {
+    const item = document.createElement("div");
+    item.className = "memo-item";
+
+    if (memo.answered) {
+      item.classList.add("answered");
     }
 
-    const leftDiv = document.createElement("div");
-    leftDiv.className = "task-left";
+    const top = document.createElement("div");
+    top.className = "memo-top";
 
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.checked = task.done;
+    const leftBox = document.createElement("div");
 
-    const span = document.createElement("span");
-    span.className = "task-text";
-    span.textContent = task.text;
+    const title = document.createElement("h2");
+    title.className = "memo-title";
+    title.textContent = memo.title;
 
-    checkbox.addEventListener("change", function () {
-      tasks[index].done = checkbox.checked;
-      saveTasks();
-      renderTasks();
+    leftBox.appendChild(title);
+
+    if (memo.answered) {
+      const badge = document.createElement("div");
+      badge.className = "answered-badge";
+      badge.textContent = "응답됨";
+      leftBox.appendChild(badge);
+    }
+
+    const date = document.createElement("div");
+    date.className = "memo-date";
+    date.textContent = formatDate(memo.createdAt);
+
+    top.appendChild(leftBox);
+    top.appendChild(date);
+
+    const content = document.createElement("div");
+    content.className = "memo-content";
+    content.textContent = memo.content;
+
+    const actions = document.createElement("div");
+    actions.className = "memo-actions";
+
+    const answerButton = document.createElement("button");
+    answerButton.className = "answer-btn";
+    answerButton.textContent = memo.answered ? "응답 해제" : "응답됨 표시";
+
+    answerButton.addEventListener("click", function () {
+      prayerMemos[index].answered = !prayerMemos[index].answered;
+      saveMemos();
+      renderMemos();
     });
 
     const deleteButton = document.createElement("button");
-    deleteButton.textContent = "삭제";
     deleteButton.className = "delete-btn";
+    deleteButton.textContent = "삭제";
 
     deleteButton.addEventListener("click", function () {
-      tasks.splice(index, 1);
-      saveTasks();
-      renderTasks();
+      const ok = confirm("이 기도제목을 삭제하시겠습니까?");
+      if (!ok) return;
+
+      prayerMemos.splice(index, 1);
+      saveMemos();
+      renderMemos();
     });
 
-    leftDiv.appendChild(checkbox);
-    leftDiv.appendChild(span);
+    actions.appendChild(answerButton);
+    actions.appendChild(deleteButton);
 
-    li.appendChild(leftDiv);
-    li.appendChild(deleteButton);
+    item.appendChild(top);
+    item.appendChild(content);
+    item.appendChild(actions);
 
-    taskList.appendChild(li);
+    memoList.appendChild(item);
   });
 
   updateStatus();
 }
 
-function addTask() {
-  const text = taskInput.value.trim();
+function addMemo() {
+  const title = titleInput.value.trim();
+  const content = contentInput.value.trim();
 
-  if (text === "") {
-    alert("할 일을 입력해 주세요.");
+  if (title === "") {
+    alert("제목을 입력해 주세요.");
+    titleInput.focus();
     return;
   }
 
-  tasks.push({
-    text: text,
-    done: false
-  });
+  if (content === "") {
+    alert("내용을 입력해 주세요.");
+    contentInput.focus();
+    return;
+  }
 
-  taskInput.value = "";
-  taskInput.focus();
+  const newMemo = {
+    title: title,
+    content: content,
+    answered: false,
+    createdAt: new Date().toISOString()
+  };
 
-  saveTasks();
-  renderTasks();
+  prayerMemos.unshift(newMemo);
+
+  titleInput.value = "";
+  contentInput.value = "";
+  titleInput.focus();
+
+  saveMemos();
+  renderMemos();
 }
 
-function clearAllTasks() {
+function clearAllMemos() {
+  if (prayerMemos.length === 0) {
+    alert("삭제할 기도제목이 없습니다.");
+    return;
+  }
+
   const ok = confirm("정말 전체 삭제하시겠습니까?");
   if (!ok) return;
 
-  tasks = [];
-  saveTasks();
-  renderTasks();
+  prayerMemos = [];
+  saveMemos();
+  renderMemos();
 }
 
-addButton.addEventListener("click", addTask);
-clearButton.addEventListener("click", clearAllTasks);
+addButton.addEventListener("click", addMemo);
+clearAllButton.addEventListener("click", clearAllMemos);
 
-taskInput.addEventListener("keydown", function (event) {
+titleInput.addEventListener("keydown", function (event) {
   if (event.key === "Enter") {
-    addTask();
+    addMemo();
   }
 });
 
-loadTasks();
-renderTasks();
+loadMemos();
+renderMemos();
