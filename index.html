@@ -2,23 +2,44 @@
 <html lang="ko">
 <head>
   <meta charset="utf-8">
-  <title>할 일 목록</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>기도제목 메모장</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="container">
-    <h1>나의 할 일 목록</h1>
-    <p>할 일을 입력하고 추가해 보세요.</p>
+    <header class="header">
+      <h1>기도제목 메모장</h1>
+      <p>기도제목을 기록하고, 응답된 항목을 체크해 보세요.</p>
+    </header>
 
-    <div class="input-area">
-      <input id="taskInput" type="text" placeholder="예: 보고서 초안 쓰기">
-      <button id="addButton">추가</button>
-      <button id="clearButton" class="secondary-btn">전체 삭제</button>
-    </div>
+    <section class="form-card">
+      <div class="form-group">
+        <label for="titleInput">제목</label>
+        <input id="titleInput" type="text" placeholder="예: 가족 건강, 딸 진로, 사역 지혜">
+      </div>
 
-    <p id="statusText">전체 0개 / 완료 0개</p>
+      <div class="form-group">
+        <label for="contentInput">내용</label>
+        <textarea id="contentInput" rows="5" placeholder="구체적인 기도 내용을 적어 보세요."></textarea>
+      </div>
 
-    <ul id="taskList"></ul>
+      <div class="button-row">
+        <button id="addButton">저장</button>
+        <button id="clearAllButton" class="secondary-btn">전체 삭제</button>
+      </div>
+    </section>
+
+    <section class="status-card">
+      <p id="statusText">전체 0개 / 응답됨 0개</p>
+    </section>
+
+    <section>
+      <div id="emptyMessage" class="empty-message">
+        아직 저장된 기도제목이 없습니다.
+      </div>
+      <div id="memoList" class="memo-list"></div>
+    </section>
   </div>
 
   <script src="script.js"></script>
